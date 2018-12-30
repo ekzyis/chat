@@ -1,22 +1,6 @@
-# IRC chat client & server
+# *IRC chat client & server*
 
-To run example:
+## Examples
 
-```console
-ekzyis@ekzyis-MINT:~/Programming/chat$ gcc example/server.cpp -o out/server
-ekzyis@ekzyis-MINT:~/Programming/chat$ gcc example/client.cpp -o out/client
-ekzyis@ekzyis-MINT:~/Programming/chat$ ./out/server
-
-
-```
-Open new console since server is now waiting for client to connect:
-```console
-ekzyis@ekzyis-MINT:~/Programming/chat$ ./out/client
-Hello message sent
-Hello from server
-```
-Output of server should be:
-```console
-Hello from client
-Hello message sent
-```
+This repository includes two examples to demonstrate basics about socket programming.
+One is from [linuxhowtos.org](http://www.linuxhowtos.org/C_C++/socket.htm) and the other is from [geeksforgeeks.org](https://www.geeksforgeeks.org/socket-programming-cc/). I added comments in those files for better understanding but except that they are unmodified.
