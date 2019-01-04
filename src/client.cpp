@@ -31,6 +31,10 @@ void read_from_server(int socket)
     if((numbytes = recv(socket, buf, MAXDATASIZE-1, 0)) == -1) {
       perror("recv");
     }
+    if(numbytes == 0) {
+      printf("server closed connection.\n");
+      exit(0);
+    }
     buf[numbytes] = '\0';
     printf("received: %s\n", buf);
   }
