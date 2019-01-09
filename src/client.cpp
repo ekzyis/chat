@@ -48,6 +48,7 @@ int setup_connection(int *sockfd, const char *address, const char *port) {
     // no errors occured - we have found a socket ...
     break;
   }
+  // ... or did run through all results
   if (p == NULL) {
     fprintf(stderr, "client: failed to connect\n");
     return 2;
