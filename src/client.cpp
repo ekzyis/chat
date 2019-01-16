@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
   }
 
   if(setup_connection(&sockfd, argv[1], PORT) != 0) {
-    printf("Could not connect to server.");
+    printf("Could not connect to server.\n");
     exit(EXIT_FAILURE);
   };
 
