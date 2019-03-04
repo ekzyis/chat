@@ -148,6 +148,7 @@ int main(void)
           }
           else
           {
+            printf("Data received from client %d: %s\n", i, buf);
             // we got some data from a client
             for (j = 0; j <= fdmax; j++)
             {
@@ -164,6 +165,8 @@ int main(void)
                 }
               }
             }
+            // clear read buffer
+            memset(&buf, 0, sizeof buf);
           }
         } // END handle data from client
       }   // END got new incoming connection
