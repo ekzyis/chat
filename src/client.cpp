@@ -96,9 +96,10 @@ int main(int argc, char *argv[])
 
   // Read from standard input and send to server
   for(;;) {
-    char userinput[MAXDATASIZE];
-    std::cin >> userinput;
-    if (send(sockfd, userinput, strlen(userinput), 0) == -1) perror("send");
+    std::string userinput;
+    std::getline(std::cin, userinput);
+    const char* cinput = userinput.c_str();
+    if (send(sockfd, cinput, strlen(cinput), 0) == -1) perror("send");
   }
   // Currently, program will never be terminated by this since we enter endless loop
   exit(EXIT_SUCCESS);
