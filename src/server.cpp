@@ -88,6 +88,8 @@ int main(void)
   for (;;)
   {
     read_fds = master; // copy it
+    // select returns when a file descriptor is ready to be read from
+    // and updates read_fds with the fds which are now ready
     if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1)
     {
       perror("select");
@@ -96,11 +98,15 @@ int main(void)
     // run through the existing connections looking for data to read
     for (i = 0; i <= fdmax; i++)
     {
+      // select() modified read_fds to signal which fds are now ready
+      // so we check if this fd is included thus in the "ready state"
       if (FD_ISSET(i, &read_fds))
-      { // we got one!!
+      {
+        // we got a fd which is ready for reading!
+        // is it the listener socket?
         if (i == listener)
         {
-          // handle new connections
+          // yes, it is => handle new connections
           addrlen = sizeof remoteaddr;
           newfd = accept(listener,
                          (struct sockaddr *)&remoteaddr,
@@ -113,8 +119,8 @@ int main(void)
           {
             FD_SET(newfd, &master); // add to master set
             if (newfd > fdmax)
-            { // keep track of the max
-              fdmax = newfd;
+            {
+              fdmax = newfd; // keep track of the max
             }
             printf("server: new connection from %s on "
                    "socket %d\n",
