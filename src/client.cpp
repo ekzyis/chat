@@ -73,7 +73,7 @@ void read_from_server(int socket) {
       exit(0);
     }
     buf[numbytes] = '\0';
-    printf("received: %s\n", buf);
+    printf("%s\n", buf);
   }
 }
 
