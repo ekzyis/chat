@@ -7,8 +7,15 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <map>
+#include <iostream>
 
 #define PORT "9034"
+
+enum SOCK_STATUS {
+  CONNECTING = 0, // client is connecting => is currently choosing a username
+  CONNECTED = 1  // client is ready to send messages
+};
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -27,6 +34,8 @@ int main(void)
   int fdmax;                          // maximum file descriptor number
   int listener;                       // listening socket descriptor
   int newfd;                          // newly accept()ed socket descriptor
+  std::map<int,SOCK_STATUS> fd_stat;
+  std::map<int,std::string> fd_username;
   struct sockaddr_storage remoteaddr; // client address
   socklen_t addrlen;
   char buf[256]; // buffer for client data
@@ -118,6 +127,7 @@ int main(void)
           else
           {
             FD_SET(newfd, &master); // add to master set
+            fd_stat.insert(std::pair<int, SOCK_STATUS>(newfd, SOCK_STATUS::CONNECTING));
             if (newfd > fdmax)
             {
               fdmax = newfd; // keep track of the max
@@ -126,6 +136,11 @@ int main(void)
                    "socket %d\n",
                    inet_ntop(remoteaddr.ss_family,get_in_addr((struct sockaddr *)&remoteaddr),remoteIP, INET6_ADDRSTRLEN),
                    newfd);
+             char const *userprompt = "Hello! Please choose a username:";
+             if(send(newfd, userprompt, strlen(userprompt), 0) == -1)
+             {
+               perror("send");
+             }
           }
         }
         else
@@ -149,21 +164,48 @@ int main(void)
           else
           {
             printf("Data received from client %d: %s\n", i, buf);
-            // we got some data from a client
-            for (j = 0; j <= fdmax; j++)
+            if(fd_stat.count(i))
             {
-              // send to everyone!
-              if (FD_ISSET(j, &master))
-              {
-                // except the listener and ourselves
-                if (j != listener && j != i)
-                {
-                  if (send(j, buf, nbytes, 0) == -1)
+              switch (fd_stat.at(i)) {
+                case SOCK_STATUS::CONNECTING :
+                  // we got the chosen username from the client
+                  fd_username.insert(std::pair<int,std::string>(i,std::string(buf)));
+                  fd_stat.at(i) = SOCK_STATUS::CONNECTED;
+                  std::cout << "username " << i << ": " << fd_username.at(i) << std::endl;
+                  break;
+                case SOCK_STATUS::CONNECTED :
+                  // we got data from a connected client!
+                  // send to every connected client!
+                  for (j = 0; j <= fdmax; j++)
                   {
-                    perror("send");
+                    if (FD_ISSET(j, &master))
+                    {
+                      // except the listener and ourselves
+                      // and not fully connected clients
+                      if (j != listener && j != i && fd_stat.at(j) != SOCK_STATUS::CONNECTING)
+                      {
+                        char message[256];
+                        std::string username = fd_username.at(i) + ": ";
+                        strcpy(message, username.c_str());
+                        strcat(message, buf);
+                        std::cout << j << " " << message << std::endl;
+                        if (send(j, message, strlen(message), 0) == -1)
+                        {
+                          perror("send");
+                        }
+                      }
+                    }
                   }
-                }
+                break;
+                default :
+                  std::cerr << "ERR: Undefined status of " << j << "!" << std::endl;
+                  break;
               }
+            }
+            else
+            {
+              // fd could not be found in map. Status of fd unknown. Error!
+              std::cerr << "ERR: Socket status of " << j << " unknown!" << std::endl;
             }
             // clear read buffer
             memset(&buf, 0, sizeof buf);
